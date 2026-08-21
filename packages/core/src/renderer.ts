@@ -1325,8 +1325,9 @@ export class CliRenderer extends EventEmitter implements RenderContext {
   private removeExitListeners(): void {
     if (!this._exitListenersAdded || this.exitSignals.length === 0) return
 
+    const processEvents = process as EventEmitter
     this.exitSignals.forEach((signal) => {
-      process.removeListener(signal, this.exitHandler)
+      processEvents.removeListener(signal, this.exitHandler)
     })
 
     this._exitListenersAdded = false
@@ -4278,12 +4279,14 @@ export class CliRenderer extends EventEmitter implements RenderContext {
     if (this._destroyCleanupPrepared) return
     this._destroyCleanupPrepared = true
 
+    // Bun 1.4's types narrow process.removeListener to its memoryPressure overload.
+    const processEvents = process as EventEmitter
     if (this._usesProcessStdout) {
-      process.removeListener("SIGWINCH", this.sigwinchHandler)
+      processEvents.removeListener("SIGWINCH", this.sigwinchHandler)
     }
-    process.removeListener("uncaughtException", this.handleError)
-    process.removeListener("unhandledRejection", this.handleError)
-    process.removeListener("warning", this.warningHandler)
+    processEvents.removeListener("uncaughtException", this.handleError)
+    processEvents.removeListener("unhandledRejection", this.handleError)
+    processEvents.removeListener("warning", this.warningHandler)
     this.removeExitListeners()
 
     if (this.resizeTimeoutId !== null) {
